@@ -101,10 +101,9 @@
   .act:hover { background: var(--line); color: var(--text); }
 
   .sep { height: 1px; background: var(--line); margin: 5px 6px; }
-  .paused-head { display: flex; align-items: center; gap: 8px; margin: 8px 6px 2px; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .paused-head { display: flex; align-items: center; gap: 8px; width: calc(100% - 12px); margin: 8px 6px 2px; padding: 2px 0; border: 0; background: none; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; text-align: left; }
+  .paused-head:hover { color: var(--text); }
   .paused-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-  .more { display: block; margin: 2px 6px 0; border: 0; background: none; padding: 2px 0; color: var(--muted); cursor: pointer; font-size: 12px; }
-  .more:hover { color: var(--text); text-decoration: underline; }
   .done { display: flex; gap: 14px; margin: 6px 6px 0; font-size: 12px; }
   .done a { color: var(--muted); text-decoration: none; }
   .done a:hover { color: var(--text); text-decoration: underline; }
@@ -483,7 +482,7 @@ function card(p, col) {
     h('span', { class: 'num' }, `#${p.number}`),
     h('a', { class: 'title', href: p.url, target: '_blank', rel: 'noopener', 'data-tip': p.title, 'data-tip-if-cut': true }, p.title),
     h('span', { class: 'actions' },
-      col === 'mine' ? h('button', { class: 'act', 'data-tip': paused ? 'Back to active PRs' : 'Pause: move to the bottom of the cell, collapsed', onclick: e => { stop(e); togglePaused(p); } }, paused ? '▶ Resume' : '⏸ Pause') : null,
+      col === 'mine' ? h('button', { class: 'act', 'data-tip': paused ? 'Back to active PRs' : 'Pause: move to the folded Paused section at the bottom of the cell', onclick: e => { stop(e); togglePaused(p); } }, paused ? '▶ Resume' : '⏸ Pause') : null,
       h('button', { class: 'act', 'data-tip': hidden ? 'Show this PR again' : 'Hide until the PR changes', onclick: e => { stop(e); toggleHidden(p); } }, hidden ? 'Unhide' : '✕'),
     ),
     badges(p.slots[col]),
@@ -505,14 +504,12 @@ function mineCell(prs, repoKey) {
     cell.append(card(p, 'mine'));
     prev = family(p.stage);
   }
+  // The Paused section folds as a whole, folded by default.
   if (paused.length) {
     const open = ui.openPaused.has(repoKey);
-    cell.append(h('div', { class: 'paused-head' }, `Paused · ${paused.length}`));
-    for (const p of open ? paused : paused.slice(0, 1)) cell.append(card(p, 'mine'));
-    if (paused.length > 1) {
-      cell.append(h('button', { class: 'more', onclick: () => { open ? ui.openPaused.delete(repoKey) : ui.openPaused.add(repoKey); render(); } },
-        open ? 'Show less' : `+ ${paused.length - 1} more`));
-    }
+    cell.append(h('button', { class: 'paused-head', 'aria-expanded': String(open), onclick: () => { open ? ui.openPaused.delete(repoKey) : ui.openPaused.add(repoKey); render(); } },
+      `${open ? '▾' : '▸'} Paused · ${paused.length}`));
+    if (open) for (const p of paused) cell.append(card(p, 'mine'));
   }
   if (!active.length && !paused.length) cell.append(h('div', { class: 'empty' }, '—'));
   return cell;

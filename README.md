@@ -8,7 +8,7 @@ Page: https://wowawiwa.github.io/pr-dashboard/
 
 - **My PRs** are sorted from closest to merge to furthest: approved, feedback received, waiting for review, nothing requested yet. Four round badges, aligned on every card, say what is missing. The first two are about people (reviews, draft), the last two about the code (CI checks, conflicts). Hovering a badge explains it and names who did what.
 - **Review requests** lists requests to you by name first, then requests to your team, oldest first. Links lead to the PRs you already reviewed or commented on.
-- **Pause** sets a PR aside at the bottom of its cell. **Hide** removes it until the PR changes.
+- **Pause** sets a PR aside in the Paused section at the bottom of its cell. The section folds and unfolds as a whole, and starts folded. **Hide** removes a PR until it changes.
 - The page refreshes only when you ask: the Refresh button, or ⌘R / Ctrl+R, which the page catches instead of reloading.
 
 ## Token
