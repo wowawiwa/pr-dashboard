@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,17 +9,17 @@
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --line: #e4e7eb; --line-strong: #d0d5db;
     --text: #1f2328; --muted: #656d76; --faint: #9aa1a9; --hover: #f3f5f7;
-    --ok: #1f883d; --bad: #d1242f; --warn: #b07800; --wait: #0969da; --ask: #8250df; --draft: #6e7781;
+    --ok: #1f883d; --bad: #d1242f; --warn: #b07800; --wait: #0969da; --ask: #8250df;
     --run: #dfe3e8; --run-ink: #57606a; --on-color: #ffffff;
     --tip-bg: #1f2328; --tip-text: #ffffff; --banner-bg: #fff8e1; --banner-line: #f0d68a;
-    --slot: 18px; --slot-gap: 4px;
+    --slot: 18px; --slot-gap: 4px; --group-space: 6px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #0d1117; --panel: #161b22; --line: #2a3038; --line-strong: #3a414a;
       --text: #e6edf3; --muted: #9198a1; --faint: #6e7681; --hover: #1d232b;
-      --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7; --draft: #8b949e;
+      --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7;
       --run: #30363d; --run-ink: #c9d1d9; --on-color: #0d1117;
       --tip-bg: #e6edf3; --tip-text: #0d1117; --banner-bg: #2b2111; --banner-line: #5c4813;
       color-scheme: dark;
@@ -28,7 +28,7 @@
   :root[data-theme="dark"] {
     --bg: #0d1117; --panel: #161b22; --line: #2a3038; --line-strong: #3a414a;
     --text: #e6edf3; --muted: #9198a1; --faint: #6e7681; --hover: #1d232b;
-    --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7; --draft: #8b949e;
+    --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7;
     --run: #30363d; --run-ink: #c9d1d9; --on-color: #0d1117;
     --tip-bg: #e6edf3; --tip-text: #0d1117; --banner-bg: #2b2111; --banner-line: #5c4813;
     color-scheme: dark;
@@ -48,6 +48,7 @@
   .btn.primary { background: var(--ok); border-color: var(--ok); color: var(--on-color); font-weight: 600; }
   .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
   .btn[disabled] { opacity: .5; cursor: default; }
+  .btn[hidden] { display: none; }
 
   .banner { margin: 0 16px 10px; padding: 8px 12px; border: 1px solid var(--banner-line); background: var(--banner-bg); border-radius: 8px; }
   .banner[hidden] { display: none; }
@@ -63,7 +64,7 @@
 
   .repo { padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .repo .owner { color: var(--faint); font-size: 11px; }
-  .repo .name { font-weight: 600; overflow-wrap: anywhere; }
+  .repo .name { font-weight: 600; overflow-wrap: anywhere; text-decoration: none; }
   .repo .extra { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
   .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 10px; padding: 0 6px; }
   .link-btn { border: 0; background: none; padding: 0; color: var(--wait); cursor: pointer; font-size: 12px; }
@@ -75,10 +76,13 @@
   .card .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
   .card .title::after { content: ""; position: absolute; inset: 0; border-radius: 6px; }
   .card .avatar { flex: none; width: 16px; height: 16px; border-radius: 50%; position: relative; z-index: 1; background: var(--line); }
-  .card.is-post .title { color: var(--muted); }
+  .card.is-paused .title { color: var(--muted); }
   .card.is-hidden { opacity: .45; }
 
-  .badges { display: flex; gap: var(--slot-gap); flex: none; position: relative; z-index: 1; }
+  /* Two badge groups: people (reviews, draft) and code (CI, conflicts). */
+  .badges { display: flex; flex: none; position: relative; z-index: 1; }
+  .bgroup { display: flex; gap: var(--slot-gap); }
+  .bgroup + .bgroup { margin-left: var(--group-space); padding-left: var(--group-space); border-left: 1px solid var(--line-strong); }
   .b { width: var(--slot); height: var(--slot); border-radius: 50%; display: grid; place-items: center; flex: none; }
   .b svg { width: 12px; height: 12px; display: block; }
   .b.off { box-shadow: inset 0 0 0 1.5px var(--line); color: var(--faint); }
@@ -89,17 +93,16 @@
   .b.wait { background: var(--wait); color: var(--on-color); }
   .b.ask { background: var(--ask); color: var(--on-color); }
   .b.ask2 { box-shadow: inset 0 0 0 1.5px var(--ask); color: var(--ask); }
-  .b.draft { background: var(--draft); color: var(--on-color); }
   .b.run { background: var(--run); color: var(--run-ink); }
 
-  .actions { display: none; position: absolute; top: 50%; transform: translateY(-50%); right: calc(6px + 5 * var(--slot) + 4 * var(--slot-gap) + 6px); z-index: 2; gap: 2px; padding-left: 10px; background: var(--hover); }
+  .actions { display: none; position: absolute; top: 50%; transform: translateY(-50%); right: calc(6px + 4 * var(--slot) + 2 * var(--slot-gap) + 2 * var(--group-space) + 1px + 6px); z-index: 2; gap: 2px; padding-left: 10px; background: var(--hover); }
   .card:hover .actions { display: flex; }
   .act { border: 0; background: transparent; color: var(--muted); padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap; }
   .act:hover { background: var(--line); color: var(--text); }
 
   .sep { height: 1px; background: var(--line); margin: 5px 6px; }
-  .post-head { display: flex; align-items: center; gap: 8px; margin: 8px 6px 2px; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-  .post-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .paused-head { display: flex; align-items: center; gap: 8px; margin: 8px 6px 2px; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .paused-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
   .more { display: block; margin: 2px 6px 0; border: 0; background: none; padding: 2px 0; color: var(--muted); cursor: pointer; font-size: 12px; }
   .more:hover { color: var(--text); text-decoration: underline; }
   .done { display: flex; gap: 14px; margin: 6px 6px 0; font-size: 12px; }
@@ -107,16 +110,17 @@
   .done a:hover { color: var(--text); text-decoration: underline; }
   .empty { color: var(--faint); padding: 4px 6px; }
 
-  #tip { position: fixed; z-index: 10; max-width: 360px; padding: 5px 8px; border-radius: 6px; background: var(--tip-bg); color: var(--tip-text); font-size: 12px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #tip { position: fixed; z-index: 10; max-width: 360px; padding: 5px 8px; border-radius: 6px; background: var(--tip-bg); color: var(--tip-text); font-size: 12px; white-space: pre-line; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
   #tip[hidden] { display: none; }
 
   dialog { border: 1px solid var(--line-strong); border-radius: 12px; background: var(--panel); color: var(--text); padding: 20px; width: min(520px, calc(100vw - 32px)); }
   dialog::backdrop { background: rgba(0,0,0,.35); }
   dialog h2 { margin: 0 0 14px; font-size: 16px; }
   dialog label { display: block; font-weight: 600; margin-top: 12px; }
-  dialog input, dialog textarea { display: block; width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--text); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  dialog textarea { display: block; width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--text); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
   dialog .help { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
   dialog .help a { color: var(--wait); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
   .login { max-width: 520px; margin: 32px auto; padding: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
   .login[hidden], .board[hidden] { display: none; }
   .login h2 { margin: 0 0 14px; font-size: 16px; }
@@ -144,24 +148,24 @@
   <h1>PR Dashboard</h1>
   <span class="status" id="status"></span>
   <button class="btn ghost" id="toggle-hidden" hidden></button>
-  <button class="btn" id="refresh">↻ Rafraîchir</button>
-  <button class="btn" id="open-settings">Réglages</button>
+  <button class="btn" id="refresh" data-tip="Refresh (⌘R or Ctrl+R)">↻ Refresh</button>
+  <button class="btn" id="open-settings">Settings</button>
 </header>
 <div class="banner" id="banner" hidden></div>
 <!-- A plain login form, present from page load, so that password managers such as Bitwarden recognize and fill it. -->
 <form class="login" id="login">
-  <h2>Ouvrir le dashboard</h2>
+  <h2>Open the dashboard</h2>
   <input type="text" name="username" autocomplete="username" value="github-token" class="visually-hidden" tabindex="-1" aria-hidden="true">
-  <label for="login-token">Token GitHub</label>
+  <label for="login-token">GitHub token</label>
   <div class="login-row">
-    <input type="password" id="login-token" name="password" autocomplete="current-password" spellcheck="false" placeholder="ghp_… ou github_pat_…" autofocus>
-    <button type="submit" class="btn primary">Ouvrir</button>
+    <input type="password" id="login-token" name="password" autocomplete="current-password" spellcheck="false" placeholder="ghp_… or github_pat_…" autofocus>
+    <button type="submit" class="btn primary">Open</button>
   </div>
-  <p class="help">Range ce token dans ton gestionnaire de mots de passe, avec l'adresse de cette page : il remplira ce champ à chaque ouverture. La page ne l'enregistre nulle part et l'oublie quand tu fermes l'onglet.</p>
+  <p class="help">Keep this token in your password manager, under this page's address, and it will fill this field every time. The page never stores the token and forgets it when you close the tab.</p>
   <div class="new-token">
-    <h3>Pas encore de token ?</h3>
-    <a class="btn" href="https://github.com/settings/tokens/new?scopes=repo,read:org&amp;description=PR%20Dashboard" target="_blank" rel="noopener">Créer un token classique ↗</a>
-    <p class="help">Les scopes <code>repo</code> et <code>read:org</code> sont déjà cochés. Choisis une durée courte, par exemple 90 jours. Si ton org impose le SSO, clique ensuite sur « Configure SSO » à côté du token pour l'autoriser.</p>
+    <h3>No token yet?</h3>
+    <a class="btn" href="https://github.com/settings/tokens/new?scopes=repo,read:org&amp;description=PR%20Dashboard" target="_blank" rel="noopener">Create a classic token ↗</a>
+    <p class="help">The <code>repo</code> and <code>read:org</code> scopes come already checked. Pick a short expiration, such as 90 days. If your org enforces SSO, click “Configure SSO” next to the token afterwards to authorize it.</p>
   </div>
 </form>
 <main class="board" id="board" hidden></main>
@@ -169,15 +173,17 @@
 
 <dialog id="settings">
   <form method="dialog" id="settings-form">
-    <h2>Réglages</h2>
-    <label for="repos">Repos, un par ligne, dans l'ordre d'affichage</label>
+    <h2>Settings</h2>
+    <label for="repos">Repositories, one per line, in display order</label>
     <textarea id="repos" rows="6" spellcheck="false" placeholder="owner/repo"></textarea>
-    <p class="help">Un repo absent de la liste mais du même owner apparaît en bas, marqué « hors liste ». Liste vide : tous les repos s'affichent.</p>
+    <p class="help">A repository missing from the list, but from an owner in it, shows up at the bottom, marked “not in list”. With an empty list, every repository shows up.</p>
+    <label>About</label>
+    <p class="help">Built in this Claude conversation: <a class="mono" href="claude://claude.ai/epitaxy/local_2c24da19-213a-497a-ab62-b628e9f185c5">claude://claude.ai/epitaxy/local_2c24da19-213a-497a-ab62-b628e9f185c5</a></p>
     <div class="dlg-actions">
-      <button type="button" class="btn ghost" id="forget">Oublier le token</button>
+      <button type="button" class="btn ghost" id="forget">Forget token</button>
       <span class="spacer"></span>
-      <button type="button" class="btn" id="cancel">Annuler</button>
-      <button type="submit" class="btn primary" value="save">Enregistrer</button>
+      <button type="button" class="btn" id="cancel">Cancel</button>
+      <button type="submit" class="btn primary" value="save">Save</button>
     </div>
   </form>
 </dialog>
@@ -187,7 +193,7 @@
 
 // ---------- Storage ----------
 
-const LS = { repos: 'prdash.repos', post: 'prdash.post', hidden: 'prdash.hidden' };
+const LS = { repos: 'prdash.repos', paused: 'prdash.paused', hidden: 'prdash.hidden' };
 const DEFAULT_REPOS = [];
 
 function load(key, fallback) {
@@ -205,7 +211,9 @@ let token = '';
 forget('prdash.token');
 
 const getRepos = () => load(LS.repos, null) ?? DEFAULT_REPOS;
-let postMap = load(LS.post, {});     // PR id -> true. Sticky until un-posted or merged.
+// PR id -> true. Sticky until resumed or merged. "Paused" was called "post" before: carry those over.
+let pausedMap = load(LS.paused, null) ?? load('prdash.post', {});
+forget('prdash.post');
 let hiddenMap = load(LS.hidden, {}); // PR id -> updatedAt at hide time. The card comes back when the PR moves.
 
 // ---------- GitHub ----------
@@ -243,16 +251,16 @@ async function gql(token) {
     headers: { Authorization: `bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: QUERY, variables: SEARCH }),
   });
-  if (res.status === 401) throw Object.assign(new Error('GitHub refuse ce token (401). Vérifie-le ou crées-en un nouveau.'), { auth: true });
-  if (!res.ok) throw new Error(`GitHub a répondu ${res.status}.`);
+  if (res.status === 401) throw Object.assign(new Error('GitHub rejected this token (401). Check it or create a new one.'), { auth: true });
+  if (!res.ok) throw new Error(`GitHub answered ${res.status}.`);
   const json = await res.json();
-  if (!json.data) throw new Error((json.errors || []).map(e => e.message).join(' · ') || 'Réponse GitHub vide.');
+  if (!json.data) throw new Error((json.errors || []).map(e => e.message).join(' · ') || 'Empty answer from GitHub.');
   return json;
 }
 
 // ---------- Model ----------
 
-// Order of "Mes PR". Families 1-2 / 3 / 4-5 / 6-9 are separated by a thin line.
+// Order of "My PRs". Families 1-2 / 3 / 4-5 / 6-9 are separated by a thin line.
 //  1 approved, mergeable       2 approved, not mergeable
 //  3 feedback received (changes requested, comments, or not enough approvals)
 //  4 waiting for review, mergeable   5 waiting for review, not mergeable
@@ -265,7 +273,7 @@ function derive(p, me) {
   const requested = p.reviewRequests.nodes.map(n => n.requestedReviewer).filter(Boolean);
   const pendingUsers = new Set(requested.filter(r => r.__typename !== 'Team').map(r => r.login));
   const teams = requested.filter(r => r.__typename === 'Team').map(r => r.name || r.slug);
-  const waitingFor = requested.map(r => r.__typename === 'Team' ? `équipe ${r.name || r.slug}` : r.login);
+  const waitingFor = requested.map(r => r.__typename === 'Team' ? `team ${r.name || r.slug}` : r.login);
 
   // A review counts if a human other than the author wrote it, and that person has not been re-requested since.
   const counts = r => r.author && r.author.__typename !== 'Bot' && r.author.login !== authorLogin && !pendingUsers.has(r.author.login);
@@ -292,25 +300,30 @@ function derive(p, me) {
   const list = a => a.join(', ');
   const named = requested.some(r => r.__typename === 'User' && r.login === me);
 
-  const draftSlot = p.isDraft ? { cls: 'draft', icon: 'pencil', tip: 'Draft' } : { cls: 'off', tip: 'Pas en draft' };
-  const reviewSlotMine = requested.length
-    ? { cls: 'wait', icon: 'clock', tip: `En attente de review : ${list(waitingFor)}` }
-    : { cls: 'off', tip: 'Aucune review en attente' };
-  const reviewSlotAsked = named
-    ? { cls: 'ask', icon: 'at', tip: 'Review demandée à toi nommément' }
-    : { cls: 'ask2', icon: 'at', tip: teams.length ? `Review demandée à ton équipe : ${list(teams)}` : 'Review demandée à ton équipe' };
-  const opinionSlot = greenlight ? { cls: 'ok', icon: 'thumb', tip: approvers.length ? `Approuvée par ${list(approvers)}` : 'Approuvée' }
-    : changers.length ? { cls: 'bad', icon: 'x', tip: `Changements demandés par ${list(changers)}` }
-    : approvers.length ? { cls: 'warn', icon: 'thumb', tip: `Approuvée par ${list(approvers)}, mais il manque des approbations` }
-    : commenters.length ? { cls: 'warn', icon: 'bubble', tip: `Commentée par ${list(commenters)}, sans verdict` }
-    : { cls: 'off', tip: "Pas encore d'avis" };
-  const checksSlot = checks === 'SUCCESS' ? { cls: 'ok', icon: 'check', tip: 'Checks au vert' }
-    : checks === 'PENDING' || checks === 'EXPECTED' ? { cls: 'run', icon: 'dots', tip: 'Checks en cours (comptent comme verts pour le tri)' }
-    : checksOk ? { cls: 'off', tip: 'Pas de checks' }
-    : { cls: 'bad', icon: 'x', tip: 'Checks en échec' };
-  const conflictSlot = conflict ? { cls: 'bad', icon: 'neq', tip: 'Conflit avec la branche cible' }
-    : p.mergeable === 'UNKNOWN' ? { cls: 'off', icon: 'q', tip: "GitHub calcule encore s'il y a un conflit" }
-    : { cls: 'off', tip: 'Pas de conflit' };
+  // One review badge: its color gives the verdict, its tooltip lists who did what.
+  const opinionLines = [
+    approvers.length && `Approved by ${list(approvers)}`,
+    changers.length && `Changes requested by ${list(changers)}`,
+    commenters.length && `Commented by ${list(commenters)}`,
+  ].filter(Boolean);
+  const mineTip = headline => [headline, ...opinionLines, requested.length && `Waiting for ${list(waitingFor)}`].filter(Boolean).join('\n');
+  const reviewSlotMine = greenlight ? { cls: 'ok', icon: 'thumb', tip: mineTip('Approved') }
+    : changers.length ? { cls: 'bad', icon: 'x', tip: mineTip('Changes requested') }
+    : requested.length ? { cls: 'wait', icon: 'clock', tip: mineTip('Waiting for review') }
+    : approvers.length ? { cls: 'warn', icon: 'thumb', tip: mineTip('More approvals needed') }
+    : commenters.length ? { cls: 'warn', icon: 'bubble', tip: mineTip('Commented, no verdict yet') }
+    : { cls: 'off', tip: 'No review requested yet' };
+  const askedHeadline = named ? 'Requested from you by name' : teams.length ? `Requested from your team: ${list(teams)}` : 'Requested from your team';
+  const reviewSlotAsked = { cls: named ? 'ask' : 'ask2', icon: 'at', tip: [askedHeadline, ...opinionLines].join('\n') };
+
+  const draftSlot = p.isDraft ? { cls: 'warn', icon: 'pencil', tip: 'Draft' } : { cls: 'ok', icon: 'check', tip: 'Ready for review (not a draft)' };
+  const checksSlot = checks === 'SUCCESS' ? { cls: 'ok', icon: 'check', tip: 'CI checks passed' }
+    : checks === 'PENDING' || checks === 'EXPECTED' ? { cls: 'run', icon: 'dots', tip: 'CI checks running (sorted as passing)' }
+    : checksOk ? { cls: 'off', tip: 'No CI checks' }
+    : { cls: 'bad', icon: 'x', tip: 'CI checks failed' };
+  const conflictSlot = conflict ? { cls: 'bad', icon: 'neq', tip: 'Conflicts with the base branch' }
+    : p.mergeable === 'UNKNOWN' ? { cls: 'off', icon: 'q', tip: 'GitHub is still checking for conflicts' }
+    : { cls: 'ok', icon: 'check', tip: 'No conflicts with the base branch' };
 
   return {
     id: p.id, number: p.number, title: p.title, url: p.url, isDraft: p.isDraft,
@@ -318,33 +331,31 @@ function derive(p, me) {
     repo: p.repository.nameWithOwner, author: authorLogin || 'ghost', avatar: p.author?.avatarUrl || '',
     stage, mergeable, named,
     slots: {
-      mine: [draftSlot, reviewSlotMine, opinionSlot, checksSlot, conflictSlot],
-      asked: [draftSlot, reviewSlotAsked, opinionSlot, checksSlot, conflictSlot],
+      mine: [reviewSlotMine, draftSlot, checksSlot, conflictSlot],
+      asked: [reviewSlotAsked, draftSlot, checksSlot, conflictSlot],
     },
   };
 }
 
 const LEGEND = {
   mine: [
+    { icon: 'thumb', tip: 'Reviews: approvals, requested changes and pending requests' },
     { icon: 'pencil', tip: 'Draft' },
-    { icon: 'clock', tip: 'Review demandée, en attente de réponse' },
-    { icon: 'thumb', tip: 'Avis des reviewers' },
-    { icon: 'check', tip: 'Checks (CI)' },
-    { icon: 'neq', tip: 'Conflit avec la branche cible' },
+    { icon: 'check', tip: 'CI checks' },
+    { icon: 'neq', tip: 'Conflicts with the base branch' },
   ],
   asked: [
+    { icon: 'at', tip: 'Review request: to you by name (filled) or to your team (outline). Other reviews in the tooltip.' },
     { icon: 'pencil', tip: 'Draft' },
-    { icon: 'at', tip: 'Demandée à toi nommément (plein) ou à ton équipe (contour)' },
-    { icon: 'thumb', tip: 'Avis des autres reviewers' },
-    { icon: 'check', tip: 'Checks (CI)' },
-    { icon: 'neq', tip: 'Conflit avec la branche cible' },
+    { icon: 'check', tip: 'CI checks' },
+    { icon: 'neq', tip: 'Conflicts with the base branch' },
   ],
 };
 
 // ---------- State ----------
 
 const state = { me: null, mine: [], asked: [], done: new Map(), fetchedAt: 0, loading: false, error: null, warnings: [] };
-const ui = { showHidden: false, openPost: new Set() };
+const ui = { showHidden: false, openPaused: new Set() };
 let unknownRetries = 0;
 
 function applyResponse(json) {
@@ -373,10 +384,10 @@ function applyResponse(json) {
   if (!json.errors) {
     const mineIds = new Set(state.mine.map(p => p.id));
     const allIds = new Set(all.map(p => p.id));
-    for (const id of Object.keys(postMap)) if (!mineIds.has(id)) delete postMap[id];
+    for (const id of Object.keys(pausedMap)) if (!mineIds.has(id)) delete pausedMap[id];
     for (const id of Object.keys(hiddenMap)) if (!allIds.has(id)) delete hiddenMap[id];
   }
-  save(LS.post, postMap);
+  save(LS.paused, pausedMap);
   save(LS.hidden, hiddenMap);
 }
 
@@ -387,12 +398,12 @@ async function refresh() {
   try {
     applyResponse(await gql(token));
     state.error = null;
-    // GitHub computes conflicts lazily: the first answer often says "unknown". Ask again shortly.
+    // GitHub computes conflicts lazily: the first answer often says "unknown". Finish this refresh with a second ask shortly after.
     const unknown = [...state.mine, ...state.asked].some(p => p.mergeableRaw === 'UNKNOWN');
     if (unknown && unknownRetries < 2) { unknownRetries++; setTimeout(refresh, 5000); } else unknownRetries = 0;
   } catch (e) {
     if (e.auth) lock(e.message);
-    else state.error = e instanceof TypeError ? 'Impossible de joindre GitHub. Vérifie ta connexion.' : e.message;
+    else state.error = e instanceof TypeError ? "Can't reach GitHub. Check your connection." : e.message;
   } finally {
     state.loading = false;
     render();
@@ -444,13 +455,19 @@ function badge(slot, extraClass = '') {
   return el;
 }
 
-const isPost = p => !!postMap[p.id];
+// Slots 1-2 are about people (reviews, draft), slots 3-4 about the code (CI, conflicts).
+function badges(slots, extraClass) {
+  const group = part => h('span', { class: 'bgroup' }, part.map(s => badge(s, extraClass)));
+  return h('span', { class: 'badges' }, group(slots.slice(0, 2)), group(slots.slice(2)));
+}
+
+const isPaused = p => !!pausedMap[p.id];
 const isHidden = p => !!hiddenMap[p.id];
 const stop = e => { e.preventDefault(); e.stopPropagation(); };
 
-function togglePost(p) {
-  if (postMap[p.id]) delete postMap[p.id]; else postMap[p.id] = true;
-  save(LS.post, postMap);
+function togglePaused(p) {
+  if (pausedMap[p.id]) delete pausedMap[p.id]; else pausedMap[p.id] = true;
+  save(LS.paused, pausedMap);
   render();
 }
 function toggleHidden(p) {
@@ -460,16 +477,16 @@ function toggleHidden(p) {
 }
 
 function card(p, col) {
-  const post = isPost(p), hidden = isHidden(p);
-  return h('div', { class: `card${post ? ' is-post' : ''}${hidden ? ' is-hidden' : ''}` },
+  const paused = isPaused(p), hidden = isHidden(p);
+  return h('div', { class: `card${paused ? ' is-paused' : ''}${hidden ? ' is-hidden' : ''}` },
     col === 'asked' ? h('img', { class: 'avatar', src: p.avatar, alt: '', 'data-tip': p.author }) : null,
     h('span', { class: 'num' }, `#${p.number}`),
     h('a', { class: 'title', href: p.url, target: '_blank', rel: 'noopener', 'data-tip': p.title, 'data-tip-if-cut': true }, p.title),
     h('span', { class: 'actions' },
-      col === 'mine' ? h('button', { class: 'act', 'data-tip': post ? 'Remettre dans les PR actives' : 'Mettre en post : en bas de la case, repliée', onclick: e => { stop(e); togglePost(p); } }, post ? '↑ Active' : '↓ Post') : null,
-      h('button', { class: 'act', 'data-tip': hidden ? 'Réafficher' : "Masquer jusqu'au prochain mouvement de la PR", onclick: e => { stop(e); toggleHidden(p); } }, hidden ? 'Réafficher' : '✕'),
+      col === 'mine' ? h('button', { class: 'act', 'data-tip': paused ? 'Back to active PRs' : 'Pause: move to the bottom of the cell, collapsed', onclick: e => { stop(e); togglePaused(p); } }, paused ? '▶ Resume' : '⏸ Pause') : null,
+      h('button', { class: 'act', 'data-tip': hidden ? 'Show this PR again' : 'Hide until the PR changes', onclick: e => { stop(e); toggleHidden(p); } }, hidden ? 'Unhide' : '✕'),
     ),
-    h('span', { class: 'badges' }, p.slots[col].map(s => badge(s))),
+    badges(p.slots[col]),
   );
 }
 
@@ -478,39 +495,38 @@ const byStage = (a, b) => a.stage - b.stage || (a.stage === 3 ? (a.mergeable ? 0
 const byRequest = (a, b) => (b.named - a.named) || a.createdAt.localeCompare(b.createdAt);
 
 function mineCell(prs, repoKey) {
-  const cell = h('div', { class: 'cell', 'data-label': 'Mes PR' });
+  const cell = h('div', { class: 'cell', 'data-label': 'My PRs' });
   const visible = prs.filter(p => ui.showHidden || !isHidden(p));
-  const active = visible.filter(p => !isPost(p)).sort(byStage);
-  const posted = visible.filter(isPost).sort(byUpdatedDesc);
+  const active = visible.filter(p => !isPaused(p)).sort(byStage);
+  const paused = visible.filter(isPaused).sort(byUpdatedDesc);
   let prev = null;
   for (const p of active) {
     if (prev !== null && family(p.stage) !== prev) cell.append(h('div', { class: 'sep' }));
     cell.append(card(p, 'mine'));
     prev = family(p.stage);
   }
-  if (posted.length) {
-    const open = ui.openPost.has(repoKey);
-    cell.append(h('div', { class: 'post-head' }, `Post · ${posted.length}`));
-    for (const p of open ? posted : posted.slice(0, 1)) cell.append(card(p, 'mine'));
-    if (posted.length > 1) {
-      const rest = posted.length - 1;
-      cell.append(h('button', { class: 'more', onclick: () => { open ? ui.openPost.delete(repoKey) : ui.openPost.add(repoKey); render(); } },
-        open ? 'Réduire' : `+ ${rest} autre${rest > 1 ? 's' : ''}`));
+  if (paused.length) {
+    const open = ui.openPaused.has(repoKey);
+    cell.append(h('div', { class: 'paused-head' }, `Paused · ${paused.length}`));
+    for (const p of open ? paused : paused.slice(0, 1)) cell.append(card(p, 'mine'));
+    if (paused.length > 1) {
+      cell.append(h('button', { class: 'more', onclick: () => { open ? ui.openPaused.delete(repoKey) : ui.openPaused.add(repoKey); render(); } },
+        open ? 'Show less' : `+ ${paused.length - 1} more`));
     }
   }
-  if (!active.length && !posted.length) cell.append(h('div', { class: 'empty' }, '—'));
+  if (!active.length && !paused.length) cell.append(h('div', { class: 'empty' }, '—'));
   return cell;
 }
 
 function askedCell(prs, repoKey, repoName) {
-  const cell = h('div', { class: 'cell', 'data-label': 'Reviews demandées' });
+  const cell = h('div', { class: 'cell', 'data-label': 'Review requests' });
   const visible = prs.filter(p => ui.showHidden || !isHidden(p)).sort(byRequest);
   for (const p of visible) cell.append(card(p, 'asked'));
   const done = state.done.get(repoKey);
   const links = [];
   const searchUrl = q => `https://github.com/search?type=pullrequests&q=${encodeURIComponent(`${q} repo:${repoName}`)}`;
-  if (done?.reviewed) links.push(h('a', { href: searchUrl(SEARCH.reviewed), target: '_blank', rel: 'noopener', 'data-tip': 'PR ouvertes que tu as déjà reviewées' }, `Déjà reviewées · ${done.reviewed} ↗`));
-  if (done?.commented) links.push(h('a', { href: searchUrl(SEARCH.commented), target: '_blank', rel: 'noopener', 'data-tip': 'PR ouvertes que tu as commentées sans les reviewer' }, `Commentées · ${done.commented} ↗`));
+  if (done?.reviewed) links.push(h('a', { href: searchUrl(SEARCH.reviewed), target: '_blank', rel: 'noopener', 'data-tip': 'Open PRs you already reviewed' }, `Reviewed · ${done.reviewed} ↗`));
+  if (done?.commented) links.push(h('a', { href: searchUrl(SEARCH.commented), target: '_blank', rel: 'noopener', 'data-tip': 'Open PRs you commented on without a review' }, `Commented · ${done.commented} ↗`));
   if (!visible.length && !links.length) cell.append(h('div', { class: 'empty' }, '—'));
   if (links.length) cell.append(h('div', { class: 'done' }, links));
   return cell;
@@ -541,36 +557,45 @@ function repoCell(row) {
   const [owner, name] = row.name.split('/');
   return h('div', { class: 'repo' },
     h('span', { class: 'owner' }, owner),
-    h('a', { class: 'name', href: `https://github.com/${row.name}/pulls`, target: '_blank', rel: 'noopener', style: 'text-decoration:none' }, name),
+    h('a', { class: 'name', href: `https://github.com/${row.name}/pulls`, target: '_blank', rel: 'noopener' }, name),
     row.listed ? null : h('span', { class: 'extra' },
-      h('span', { class: 'tag' }, 'hors liste'),
-      h('button', { class: 'link-btn', 'data-tip': 'Ajouter ce repo à ta liste', onclick: () => { save(LS.repos, [...getRepos(), row.name]); render(); } }, '+ ajouter'),
+      h('span', { class: 'tag' }, 'not in list'),
+      h('button', { class: 'link-btn', 'data-tip': 'Add this repository to your list', onclick: () => { save(LS.repos, [...getRepos(), row.name]); render(); } }, '+ add'),
     ),
   );
 }
 
 function headRow() {
   const col = (label, key) => h('div', { class: 'cell' },
-    h('div', { class: 'colhead' }, h('span', { class: 'label' }, label), h('span', { class: 'badges' }, LEGEND[key].map(s => badge(s, 'legend')))));
-  return h('div', { class: 'row head' }, h('div', { class: 'repo' }, h('span', { class: 'owner' }, 'Repo')), col('Mes PR', 'mine'), col('Reviews demandées', 'asked'));
+    h('div', { class: 'colhead' }, h('span', { class: 'label' }, label), badges(LEGEND[key], 'legend')));
+  return h('div', { class: 'row head' }, h('div', { class: 'repo' }, h('span', { class: 'owner' }, 'Repo')), col('My PRs', 'mine'), col('Review requests', 'asked'));
 }
 
 function hiddenCount() {
   return [...state.mine, ...state.asked].filter(isHidden).length;
 }
 
+function ago(ms) {
+  const min = Math.floor(ms / 60_000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min} min ago`;
+  return `${Math.floor(min / 60)} h ago`;
+}
+
 function renderTop() {
   const status = $('#status');
-  if (state.loading) status.textContent = 'Chargement…';
-  else if (state.fetchedAt) status.textContent = `À jour à ${new Date(state.fetchedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${state.me ? ` · ${state.me}` : ''}`;
-  else status.textContent = '';
+  if (state.loading) status.textContent = 'Refreshing…';
+  else if (state.fetchedAt) {
+    const time = new Date(state.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    status.textContent = `Last refreshed ${time} (${ago(Date.now() - state.fetchedAt)})${state.me ? ` · ${state.me}` : ''}`;
+  } else status.textContent = '';
   $('#refresh').disabled = state.loading;
   $('#refresh').hidden = !token;
 
   const n = hiddenCount();
   const toggle = $('#toggle-hidden');
   toggle.hidden = n === 0 && !ui.showHidden;
-  toggle.textContent = ui.showHidden ? 'Cacher les masquées' : `Masquées · ${n}`;
+  toggle.textContent = ui.showHidden ? 'Hide hidden PRs' : `Show hidden · ${n}`;
 
   const banner = $('#banner');
   const messages = [state.error, ...state.warnings].filter(Boolean);
@@ -589,6 +614,9 @@ function render() {
   board.append(headRow());
   for (const row of buildRows()) board.append(h('div', { class: 'row' }, repoCell(row), mineCell(row.mine, row.key), askedCell(row.asked, row.key, row.name)));
 }
+
+// Keep "x min ago" current. This only redraws the header: the data refreshes when you ask.
+setInterval(renderTop, 30_000);
 
 // ---------- Tooltip ----------
 
@@ -652,13 +680,19 @@ $('#login').addEventListener('submit', e => {
   render();
   refresh();
 });
+
+// ---------- Refresh ----------
+
 $('#refresh').addEventListener('click', () => refresh());
 $('#toggle-hidden').addEventListener('click', () => { ui.showHidden = !ui.showHidden; render(); });
 
-// Refresh when coming back to the tab, at most once a minute.
-const refreshIfStale = () => { if (token && !document.hidden && Date.now() - state.fetchedAt > 60_000) refresh(); };
-document.addEventListener('visibilitychange', refreshIfStale);
-window.addEventListener('focus', refreshIfStale);
+// ⌘R, Ctrl+R and F5 refresh the data instead of reloading the page, which would drop the in-memory token. Before login, they reload as usual.
+document.addEventListener('keydown', e => {
+  const reloadKey = ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'r') || e.key === 'F5';
+  if (!reloadKey || !token) return;
+  e.preventDefault();
+  refresh();
+});
 
 // Debug hook: lets a GraphQL answer be rendered by hand, e.g. prdash.render(json).
 window.prdash = { query: { query: QUERY, variables: SEARCH }, render: json => { applyResponse(json); render(); } };

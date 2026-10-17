@@ -1,25 +1,26 @@
 # PR Dashboard
 
-Une carte de tes pull requests GitHub ouvertes : une ligne par repo, une colonne pour tes PR, une pour les reviews qu'on te demande.
+A map of your open GitHub pull requests: one row per repository, one column for your PRs, one for the reviews requested from you.
 
-Page : https://wowawiwa.github.io/pr-dashboard/
+Page: https://wowawiwa.github.io/pr-dashboard/
 
-## Ce que fait la page
+## What the page shows
 
-- **Mes PR** sont triées de la plus avancée à la moins avancée : approuvées, retour reçu, en attente de review, rien demandé. Des badges ronds, alignés sur toutes les cartes, disent ce qui manque : draft, review en attente, avis, checks, conflit. Le survol explique chaque badge.
-- **Reviews demandées** montre d'abord celles qui te visent nommément, puis celles faites à ton équipe, de la plus ancienne à la plus récente. Des liens mènent aux PR que tu as déjà reviewées ou commentées.
-- **Post** met une PR de côté en bas de sa case. **Masquer** la cache jusqu'à son prochain mouvement.
+- **My PRs** are sorted from closest to merge to furthest: approved, feedback received, waiting for review, nothing requested yet. Four round badges, aligned on every card, say what is missing. The first two are about people (reviews, draft), the last two about the code (CI checks, conflicts). Hovering a badge explains it and names who did what.
+- **Review requests** lists requests to you by name first, then requests to your team, oldest first. Links lead to the PRs you already reviewed or commented on.
+- **Pause** sets a PR aside at the bottom of its cell. **Hide** removes it until the PR changes.
+- The page refreshes only when you ask: the Refresh button, or ⌘R / Ctrl+R, which the page catches instead of reloading.
 
 ## Token
 
-La page appelle l'API GitHub directement depuis le navigateur, sans serveur. Elle n'enregistre jamais le token. Il vit dans ton gestionnaire de mots de passe, puis dans la mémoire de l'onglet, et il n'est envoyé qu'à `api.github.com`. Fermer l'onglet l'oublie.
+The page calls the GitHub API straight from the browser, with no server. It never stores the token. The token lives in your password manager, then in the tab's memory, and only goes to `api.github.com`. Closing the tab forgets it.
 
-À l'ouverture, la page affiche un formulaire de connexion avec un seul champ. Pour que Bitwarden le remplisse, crée un identifiant avec le token comme mot de passe et `https://wowawiwa.github.io/pr-dashboard/` comme URI. Bitwarden le remplit alors avec son raccourci (Cmd+Shift+L), depuis son menu dans le champ, ou tout seul si tu actives pour cet identifiant le remplissage automatique au chargement. La page démarre dès que le champ est rempli.
+The page opens on a login form with a single field. For Bitwarden to fill it, create a login with the token as password and `https://wowawiwa.github.io/pr-dashboard/` as URI. Bitwarden then fills it with its shortcut (⌘⇧L), from its menu in the field, or on its own if you turn on autofill on page load for that login. The dashboard opens as soon as the field is filled.
 
-Ta liste de repos et tes PR en post ou masquées restent dans le localStorage du navigateur. Rien de tout ça n'est sensible.
+The login screen links to a classic token with the `repo` and `read:org` scopes already checked. Pick a short expiration. If your org enforces SSO, authorize the token for it with “Configure SSO”.
 
-L'écran de connexion propose un lien qui crée un token classique avec les scopes `repo` et `read:org` déjà cochés. Choisis une durée courte. Si ton org impose le SSO, autorise ensuite le token pour elle avec « Configure SSO ».
+Your repository list and your paused or hidden PRs stay in the browser's localStorage. None of it is sensitive.
 
-## Développement
+## Development
 
-Un seul fichier, `index.html`, sans dépendance ni build. Pour tester le rendu sans token, passe une réponse de la requête `prdash.query` à `prdash.render(json)` dans la console.
+A single file, `index.html`, with no dependency and no build step. To test the rendering without a token, pass an answer to the `prdash.query` request to `prdash.render(json)` in the console.
