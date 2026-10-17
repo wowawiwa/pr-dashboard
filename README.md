@@ -12,7 +12,11 @@ Page : https://wowawiwa.github.io/pr-dashboard/
 
 ## Token
 
-La page appelle l'API GitHub directement depuis le navigateur, sans serveur. Le token reste dans le localStorage du navigateur et n'est envoyé qu'à `api.github.com`.
+La page appelle l'API GitHub directement depuis le navigateur, sans serveur. Elle n'enregistre jamais le token. Il vit dans ton gestionnaire de mots de passe, puis dans la mémoire de l'onglet, et il n'est envoyé qu'à `api.github.com`. Fermer l'onglet l'oublie.
+
+À l'ouverture, la page affiche un formulaire de connexion avec un seul champ. Pour que Bitwarden le remplisse, crée un identifiant avec le token comme mot de passe et `https://wowawiwa.github.io/pr-dashboard/` comme URI. Bitwarden le remplit alors avec son raccourci (Cmd+Shift+L), depuis son menu dans le champ, ou tout seul si tu actives pour cet identifiant le remplissage automatique au chargement. La page démarre dès que le champ est rempli.
+
+Ta liste de repos et tes PR en post ou masquées restent dans le localStorage du navigateur. Rien de tout ça n'est sensible.
 
 Les réglages proposent deux liens de création pré-remplis :
 
