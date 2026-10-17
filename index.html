@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%231f883d'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --line: #e4e7eb; --line-strong: #d0d5db;
+    --text: #1f2328; --muted: #656d76; --faint: #9aa1a9; --hover: #f3f5f7;
+    --ok: #1f883d; --bad: #d1242f; --warn: #b07800; --wait: #0969da; --ask: #8250df; --draft: #6e7781;
+    --run: #dfe3e8; --run-ink: #57606a; --on-color: #ffffff;
+    --tip-bg: #1f2328; --tip-text: #ffffff; --banner-bg: #fff8e1; --banner-line: #f0d68a;
+    --slot: 18px; --slot-gap: 4px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --panel: #161b22; --line: #2a3038; --line-strong: #3a414a;
+      --text: #e6edf3; --muted: #9198a1; --faint: #6e7681; --hover: #1d232b;
+      --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7; --draft: #8b949e;
+      --run: #30363d; --run-ink: #c9d1d9; --on-color: #0d1117;
+      --tip-bg: #e6edf3; --tip-text: #0d1117; --banner-bg: #2b2111; --banner-line: #5c4813;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --panel: #161b22; --line: #2a3038; --line-strong: #3a414a;
+    --text: #e6edf3; --muted: #9198a1; --faint: #6e7681; --hover: #1d232b;
+    --ok: #2ea043; --bad: #f85149; --warn: #d29922; --wait: #388bfd; --ask: #a371f7; --draft: #8b949e;
+    --run: #30363d; --run-ink: #c9d1d9; --on-color: #0d1117;
+    --tip-bg: #e6edf3; --tip-text: #0d1117; --banner-bg: #2b2111; --banner-line: #5c4813;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  code { font-size: 12px; }
+
+  .top { display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px; flex-wrap: wrap; }
+  .top h1 { font-size: 15px; font-weight: 650; margin: 0 6px 0 0; }
+  .status { color: var(--muted); font-size: 12px; margin-right: auto; }
+  .btn { border: 1px solid var(--line-strong); background: var(--panel); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .btn:hover { background: var(--hover); }
+  .btn.primary { background: var(--ok); border-color: var(--ok); color: var(--on-color); font-weight: 600; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn[disabled] { opacity: .5; cursor: default; }
+
+  .banner { margin: 0 16px 10px; padding: 8px 12px; border: 1px solid var(--banner-line); background: var(--banner-bg); border-radius: 8px; }
+  .banner[hidden] { display: none; }
+
+  .board { margin: 0 16px 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: clip; }
+  .row { display: grid; grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr); border-top: 1px solid var(--line); }
+  .row.head { position: sticky; top: 0; z-index: 3; background: var(--panel); border-top: 0; border-bottom: 1px solid var(--line-strong); }
+  .row.head + .row { border-top: 0; }
+  .cell { padding: 8px 10px; border-left: 1px solid var(--line); min-width: 0; }
+  .row.head .cell { padding-top: 6px; padding-bottom: 6px; }
+  .colhead { display: flex; align-items: center; height: 28px; padding: 0 6px; gap: 8px; }
+  .colhead .label { flex: 1; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+
+  .repo { padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .repo .owner { color: var(--faint); font-size: 11px; }
+  .repo .name { font-weight: 600; overflow-wrap: anywhere; }
+  .repo .extra { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 10px; padding: 0 6px; }
+  .link-btn { border: 0; background: none; padding: 0; color: var(--wait); cursor: pointer; font-size: 12px; }
+  .link-btn:hover { text-decoration: underline; }
+
+  .card { position: relative; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 6px; border-radius: 6px; }
+  .card:hover { background: var(--hover); }
+  .card .num { flex: none; width: 46px; color: var(--faint); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .card .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+  .card .title::after { content: ""; position: absolute; inset: 0; border-radius: 6px; }
+  .card .avatar { flex: none; width: 16px; height: 16px; border-radius: 50%; position: relative; z-index: 1; background: var(--line); }
+  .card.is-post .title { color: var(--muted); }
+  .card.is-hidden { opacity: .45; }
+
+  .badges { display: flex; gap: var(--slot-gap); flex: none; position: relative; z-index: 1; }
+  .b { width: var(--slot); height: var(--slot); border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .b svg { width: 12px; height: 12px; display: block; }
+  .b.off { box-shadow: inset 0 0 0 1.5px var(--line); color: var(--faint); }
+  .b.legend { color: var(--faint); }
+  .b.ok { background: var(--ok); color: var(--on-color); }
+  .b.bad { background: var(--bad); color: var(--on-color); }
+  .b.warn { background: var(--warn); color: var(--on-color); }
+  .b.wait { background: var(--wait); color: var(--on-color); }
+  .b.ask { background: var(--ask); color: var(--on-color); }
+  .b.ask2 { box-shadow: inset 0 0 0 1.5px var(--ask); color: var(--ask); }
+  .b.draft { background: var(--draft); color: var(--on-color); }
+  .b.run { background: var(--run); color: var(--run-ink); }
+
+  .actions { display: none; position: absolute; top: 50%; transform: translateY(-50%); right: calc(6px + 5 * var(--slot) + 4 * var(--slot-gap) + 6px); z-index: 2; gap: 2px; padding-left: 10px; background: var(--hover); }
+  .card:hover .actions { display: flex; }
+  .act { border: 0; background: transparent; color: var(--muted); padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+  .act:hover { background: var(--line); color: var(--text); }
+
+  .sep { height: 1px; background: var(--line); margin: 5px 6px; }
+  .post-head { display: flex; align-items: center; gap: 8px; margin: 8px 6px 2px; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .post-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .more { display: block; margin: 2px 6px 0; border: 0; background: none; padding: 2px 0; color: var(--muted); cursor: pointer; font-size: 12px; }
+  .more:hover { color: var(--text); text-decoration: underline; }
+  .done { display: flex; gap: 14px; margin: 6px 6px 0; font-size: 12px; }
+  .done a { color: var(--muted); text-decoration: none; }
+  .done a:hover { color: var(--text); text-decoration: underline; }
+  .empty { color: var(--faint); padding: 4px 6px; }
+  .blank { padding: 40px 16px; text-align: center; color: var(--muted); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+  #tip { position: fixed; z-index: 10; max-width: 360px; padding: 5px 8px; border-radius: 6px; background: var(--tip-bg); color: var(--tip-text); font-size: 12px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #tip[hidden] { display: none; }
+
+  dialog { border: 1px solid var(--line-strong); border-radius: 12px; background: var(--panel); color: var(--text); padding: 20px; width: min(520px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog h2 { margin: 0 0 14px; font-size: 16px; }
+  dialog label { display: block; font-weight: 600; margin-top: 12px; }
+  dialog input, dialog textarea { display: block; width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--text); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  dialog .help { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  dialog .help a { color: var(--wait); }
+  .msg { color: var(--bad); margin: 0 0 8px; }
+  .msg[hidden] { display: none; }
+  .dlg-actions { display: flex; gap: 8px; margin-top: 18px; align-items: center; }
+  .dlg-actions .spacer { flex: 1; }
+
+  @media (max-width: 760px) {
+    .row { grid-template-columns: minmax(0, 1fr); }
+    .row.head { display: none; }
+    .cell { border-left: 0; border-top: 1px dashed var(--line); }
+    .cell::before { content: attr(data-label); display: block; margin: 0 6px 4px; color: var(--faint); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>PR Dashboard</h1>
+  <span class="status" id="status"></span>
+  <button class="btn ghost" id="toggle-hidden" hidden></button>
+  <button class="btn" id="refresh">↻ Rafraîchir</button>
+  <button class="btn" id="open-settings">Réglages</button>
+</header>
+<div class="banner" id="banner" hidden></div>
+<main class="board" id="board"></main>
+<div id="tip" hidden></div>
+
+<dialog id="settings">
+  <form method="dialog" id="settings-form">
+    <h2>Réglages</h2>
+    <p class="msg" id="settings-msg" hidden></p>
+    <label for="token">Token GitHub</label>
+    <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="ghp_… ou github_pat_…">
+    <p class="help">Recommandé : un token fine-grained en lecture seule, limité à <strong id="fg-owner">ton org</strong> (<a id="fg-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">créer le token</a>, permissions déjà remplies). Sur GitHub, il ne reste qu'à choisir « All repositories ». Si l'org exige une approbation, le token ne voit rien tant qu'un admin ne l'a pas validé.</p>
+    <p class="help">Plan B, si les checks restent vides avec ce token : un token classique avec les scopes <code>repo</code> et <code>read:org</code> (<a href="https://github.com/settings/tokens/new?scopes=repo,read:org&amp;description=PR%20dashboard" target="_blank" rel="noopener">créer le token</a>). Si l'org impose le SSO, clique ensuite sur « Configure SSO » à côté du token. Dans les deux cas, le token reste dans ce navigateur.</p>
+    <label for="repos">Repos, un par ligne, dans l'ordre d'affichage</label>
+    <textarea id="repos" rows="6" spellcheck="false" placeholder="owner/repo"></textarea>
+    <p class="help">Un repo absent de la liste mais du même owner apparaît en bas, marqué « hors liste ». Liste vide : tous les repos s'affichent.</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="forget">Oublier le token</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="cancel">Annuler</button>
+      <button type="submit" class="btn primary" value="save">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+
+// ---------- Storage ----------
+
+const LS = { token: 'prdash.token', repos: 'prdash.repos', post: 'prdash.post', hidden: 'prdash.hidden' };
+const DEFAULT_REPOS = [];
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable: state lives for this visit only */ }
+}
+function forget(key) {
+  try { localStorage.removeItem(key); } catch { /* ignore */ }
+}
+
+const getToken = () => load(LS.token, '');
+const getRepos = () => load(LS.repos, null) ?? DEFAULT_REPOS;
+let postMap = load(LS.post, {});     // PR id -> true. Sticky until un-posted or merged.
+let hiddenMap = load(LS.hidden, {}); // PR id -> updatedAt at hide time. The card comes back when the PR moves.
+
+// ---------- GitHub ----------
+
+const BASE = 'is:pr is:open archived:false';
+const SEARCH = {
+  mine: `${BASE} author:@me`,
+  asked: `${BASE} review-requested:@me`,
+  reviewed: `${BASE} reviewed-by:@me -author:@me -review-requested:@me`,
+  commented: `${BASE} commenter:@me -reviewed-by:@me -author:@me -review-requested:@me`,
+};
+
+const PR_FIELDS = `
+  id number title url isDraft createdAt updatedAt reviewDecision mergeable
+  repository { nameWithOwner }
+  author { login avatarUrl(size: 32) }
+  reviewRequests(first: 20) { nodes { requestedReviewer { __typename ... on User { login } ... on Team { slug name } ... on Bot { login } ... on Mannequin { login } } } }
+  latestOpinionatedReviews(first: 20, writersOnly: true) { nodes { state author { __typename login } } }
+  latestReviews(first: 20) { nodes { state author { __typename login } } }
+  commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+`;
+
+const QUERY = `
+query($mine: String!, $asked: String!, $reviewed: String!, $commented: String!) {
+  viewer { login }
+  mine: search(query: $mine, type: ISSUE, first: 100) { nodes { ... on PullRequest { ${PR_FIELDS} } } }
+  asked: search(query: $asked, type: ISSUE, first: 100) { nodes { ... on PullRequest { ${PR_FIELDS} } } }
+  reviewed: search(query: $reviewed, type: ISSUE, first: 100) { nodes { ... on PullRequest { id repository { nameWithOwner } } } }
+  commented: search(query: $commented, type: ISSUE, first: 100) { nodes { ... on PullRequest { id repository { nameWithOwner } } } }
+}`;
+
+async function gql(token) {
+  const res = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: { Authorization: `bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: QUERY, variables: SEARCH }),
+  });
+  if (res.status === 401) throw Object.assign(new Error('GitHub refuse ce token (401). Vérifie-le ou crées-en un nouveau.'), { auth: true });
+  if (!res.ok) throw new Error(`GitHub a répondu ${res.status}.`);
+  const json = await res.json();
+  if (!json.data) throw new Error((json.errors || []).map(e => e.message).join(' · ') || 'Réponse GitHub vide.');
+  return json;
+}
+
+// ---------- Model ----------
+
+// Order of "Mes PR". Families 1-2 / 3 / 4-5 / 6-9 are separated by a thin line.
+//  1 approved, mergeable       2 approved, not mergeable
+//  3 feedback received (changes requested, comments, or not enough approvals)
+//  4 waiting for review, mergeable   5 waiting for review, not mergeable
+//  6 nothing asked, mergeable        7 same, draft
+//  8 nothing asked, not mergeable    9 same, draft
+const family = stage => stage <= 2 ? 0 : stage === 3 ? 1 : stage <= 5 ? 2 : 3;
+
+function derive(p, me) {
+  const authorLogin = p.author?.login;
+  const requested = p.reviewRequests.nodes.map(n => n.requestedReviewer).filter(Boolean);
+  const pendingUsers = new Set(requested.filter(r => r.__typename !== 'Team').map(r => r.login));
+  const teams = requested.filter(r => r.__typename === 'Team').map(r => r.name || r.slug);
+  const waitingFor = requested.map(r => r.__typename === 'Team' ? `équipe ${r.name || r.slug}` : r.login);
+
+  // A review counts if a human other than the author wrote it, and that person has not been re-requested since.
+  const counts = r => r.author && r.author.__typename !== 'Bot' && r.author.login !== authorLogin && !pendingUsers.has(r.author.login);
+  const opinions = p.latestOpinionatedReviews.nodes.filter(counts);
+  const approvers = opinions.filter(r => r.state === 'APPROVED').map(r => r.author.login);
+  const changers = opinions.filter(r => r.state === 'CHANGES_REQUESTED').map(r => r.author.login);
+  const opinionated = new Set(opinions.map(r => r.author.login));
+  const commenters = p.latestReviews.nodes.filter(r => counts(r) && r.state === 'COMMENTED' && !opinionated.has(r.author.login)).map(r => r.author.login);
+
+  // GitHub's own verdict knows the repo's review rules. Stacked PRs have none, so fall back to "one approval, no change requested".
+  const greenlight = p.reviewDecision ? p.reviewDecision === 'APPROVED' : approvers.length > 0 && changers.length === 0;
+  const checks = p.commits.nodes[0]?.commit?.statusCheckRollup?.state ?? null;
+  const checksOk = checks !== 'FAILURE' && checks !== 'ERROR';
+  const conflict = p.mergeable === 'CONFLICTING';
+  const mergeable = checksOk && !conflict;
+
+  let stage;
+  if (greenlight) stage = mergeable ? 1 : 2;
+  else if (changers.length) stage = 3;
+  else if (requested.length) stage = mergeable ? 4 : 5;
+  else if (approvers.length || commenters.length) stage = 3;
+  else stage = (mergeable ? 6 : 8) + (p.isDraft ? 1 : 0);
+
+  const list = a => a.join(', ');
+  const named = requested.some(r => r.__typename === 'User' && r.login === me);
+
+  const draftSlot = p.isDraft ? { cls: 'draft', icon: 'pencil', tip: 'Draft' } : { cls: 'off', tip: 'Pas en draft' };
+  const reviewSlotMine = requested.length
+    ? { cls: 'wait', icon: 'clock', tip: `En attente de review : ${list(waitingFor)}` }
+    : { cls: 'off', tip: 'Aucune review en attente' };
+  const reviewSlotAsked = named
+    ? { cls: 'ask', icon: 'at', tip: 'Review demandée à toi nommément' }
+    : { cls: 'ask2', icon: 'at', tip: teams.length ? `Review demandée à ton équipe : ${list(teams)}` : 'Review demandée à ton équipe' };
+  const opinionSlot = greenlight ? { cls: 'ok', icon: 'thumb', tip: approvers.length ? `Approuvée par ${list(approvers)}` : 'Approuvée' }
+    : changers.length ? { cls: 'bad', icon: 'x', tip: `Changements demandés par ${list(changers)}` }
+    : approvers.length ? { cls: 'warn', icon: 'thumb', tip: `Approuvée par ${list(approvers)}, mais il manque des approbations` }
+    : commenters.length ? { cls: 'warn', icon: 'bubble', tip: `Commentée par ${list(commenters)}, sans verdict` }
+    : { cls: 'off', tip: "Pas encore d'avis" };
+  const checksSlot = checks === 'SUCCESS' ? { cls: 'ok', icon: 'check', tip: 'Checks au vert' }
+    : checks === 'PENDING' || checks === 'EXPECTED' ? { cls: 'run', icon: 'dots', tip: 'Checks en cours (comptent comme verts pour le tri)' }
+    : checksOk ? { cls: 'off', tip: 'Pas de checks' }
+    : { cls: 'bad', icon: 'x', tip: 'Checks en échec' };
+  const conflictSlot = conflict ? { cls: 'bad', icon: 'neq', tip: 'Conflit avec la branche cible' }
+    : p.mergeable === 'UNKNOWN' ? { cls: 'off', icon: 'q', tip: "GitHub calcule encore s'il y a un conflit" }
+    : { cls: 'off', tip: 'Pas de conflit' };
+
+  return {
+    id: p.id, number: p.number, title: p.title, url: p.url, isDraft: p.isDraft,
+    createdAt: p.createdAt, updatedAt: p.updatedAt, mergeableRaw: p.mergeable,
+    repo: p.repository.nameWithOwner, author: authorLogin || 'ghost', avatar: p.author?.avatarUrl || '',
+    stage, mergeable, named,
+    slots: {
+      mine: [draftSlot, reviewSlotMine, opinionSlot, checksSlot, conflictSlot],
+      asked: [draftSlot, reviewSlotAsked, opinionSlot, checksSlot, conflictSlot],
+    },
+  };
+}
+
+const LEGEND = {
+  mine: [
+    { icon: 'pencil', tip: 'Draft' },
+    { icon: 'clock', tip: 'Review demandée, en attente de réponse' },
+    { icon: 'thumb', tip: 'Avis des reviewers' },
+    { icon: 'check', tip: 'Checks (CI)' },
+    { icon: 'neq', tip: 'Conflit avec la branche cible' },
+  ],
+  asked: [
+    { icon: 'pencil', tip: 'Draft' },
+    { icon: 'at', tip: 'Demandée à toi nommément (plein) ou à ton équipe (contour)' },
+    { icon: 'thumb', tip: 'Avis des autres reviewers' },
+    { icon: 'check', tip: 'Checks (CI)' },
+    { icon: 'neq', tip: 'Conflit avec la branche cible' },
+  ],
+};
+
+// ---------- State ----------
+
+const state = { me: null, mine: [], asked: [], done: new Map(), fetchedAt: 0, loading: false, error: null, warnings: [] };
+const ui = { showHidden: false, openPost: new Set() };
+let unknownRetries = 0;
+
+function applyResponse(json) {
+  const d = json.data;
+  const me = d.viewer.login;
+  const prs = conn => (conn?.nodes || []).filter(n => n && n.id);
+  state.me = me;
+  state.mine = prs(d.mine).map(p => derive(p, me));
+  state.asked = prs(d.asked).map(p => derive(p, me));
+  state.done = new Map();
+  for (const key of ['reviewed', 'commented']) {
+    for (const p of prs(d[key])) {
+      const repo = p.repository.nameWithOwner.toLowerCase();
+      const entry = state.done.get(repo) || { reviewed: 0, commented: 0 };
+      entry[key]++;
+      state.done.set(repo, entry);
+    }
+  }
+  state.warnings = [...new Set((json.errors || []).map(e => e.message))];
+  state.fetchedAt = Date.now();
+
+  // A hidden card comes back as soon as its PR moved.
+  const all = [...state.mine, ...state.asked];
+  for (const p of all) if (hiddenMap[p.id] && hiddenMap[p.id] !== p.updatedAt) delete hiddenMap[p.id];
+  // Forget closed or merged PRs, but only when the answer is complete.
+  if (!json.errors) {
+    const mineIds = new Set(state.mine.map(p => p.id));
+    const allIds = new Set(all.map(p => p.id));
+    for (const id of Object.keys(postMap)) if (!mineIds.has(id)) delete postMap[id];
+    for (const id of Object.keys(hiddenMap)) if (!allIds.has(id)) delete hiddenMap[id];
+  }
+  save(LS.post, postMap);
+  save(LS.hidden, hiddenMap);
+}
+
+async function refresh() {
+  const token = getToken();
+  if (!token) { render(); openSettings(); return; }
+  if (state.loading) return;
+  state.loading = true;
+  renderTop();
+  try {
+    applyResponse(await gql(token));
+    state.error = null;
+    // GitHub computes conflicts lazily: the first answer often says "unknown". Ask again shortly.
+    const unknown = [...state.mine, ...state.asked].some(p => p.mergeableRaw === 'UNKNOWN');
+    if (unknown && unknownRetries < 2) { unknownRetries++; setTimeout(refresh, 5000); } else unknownRetries = 0;
+  } catch (e) {
+    state.error = e instanceof TypeError ? 'Impossible de joindre GitHub. Vérifie ta connexion.' : e.message;
+    if (e.auth) openSettings(e.message);
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+// ---------- Rendering ----------
+
+const $ = sel => document.querySelector(sel);
+
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) if (c != null && c !== false) el.append(c);
+  return el;
+}
+
+const ICONS = {
+  pencil: '<path d="M10.5 3.5l2 2L6 12H4v-2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+  clock: '<circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 5.5V8l1.7 1.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  thumb: '<path d="M2.5 7h2v6h-2zM5.5 13h5.4c.6 0 1.1-.4 1.2-1l.8-3.6c.2-.8-.4-1.4-1.1-1.4H9.6l.4-2.2c.1-.8-.5-1.5-1.3-1.5h-.2L5.5 7z" fill="currentColor"/>',
+  check: '<path d="M4 8.4l2.6 2.6L12 5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  x: '<path d="M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  bubble: '<path d="M3.5 4.5h9v6H8l-2.6 2.2v-2.2H3.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  dots: '<circle cx="4.6" cy="8" r="1.25" fill="currentColor"/><circle cx="8" cy="8" r="1.25" fill="currentColor"/><circle cx="11.4" cy="8" r="1.25" fill="currentColor"/>',
+  neq: '<path d="M4 6.4h8M4 9.6h8M10.2 3.8l-4.4 8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  at: '<text x="8" y="11.7" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui,-apple-system,sans-serif" fill="currentColor">@</text>',
+  q: '<text x="8" y="11.6" text-anchor="middle" font-size="10" font-weight="700" font-family="system-ui,-apple-system,sans-serif" fill="currentColor">?</text>',
+};
+
+function badge(slot, extraClass = '') {
+  const el = h('span', { class: `b ${slot.cls || ''} ${extraClass}`.trim(), 'data-tip': slot.tip, role: 'img', 'aria-label': slot.tip });
+  if (slot.icon) el.innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[slot.icon]}</svg>`;
+  return el;
+}
+
+const isPost = p => !!postMap[p.id];
+const isHidden = p => !!hiddenMap[p.id];
+const stop = e => { e.preventDefault(); e.stopPropagation(); };
+
+function togglePost(p) {
+  if (postMap[p.id]) delete postMap[p.id]; else postMap[p.id] = true;
+  save(LS.post, postMap);
+  render();
+}
+function toggleHidden(p) {
+  if (hiddenMap[p.id]) delete hiddenMap[p.id]; else hiddenMap[p.id] = p.updatedAt;
+  save(LS.hidden, hiddenMap);
+  render();
+}
+
+function card(p, col) {
+  const post = isPost(p), hidden = isHidden(p);
+  return h('div', { class: `card${post ? ' is-post' : ''}${hidden ? ' is-hidden' : ''}` },
+    col === 'asked' ? h('img', { class: 'avatar', src: p.avatar, alt: '', 'data-tip': p.author }) : null,
+    h('span', { class: 'num' }, `#${p.number}`),
+    h('a', { class: 'title', href: p.url, target: '_blank', rel: 'noopener', 'data-tip': p.title, 'data-tip-if-cut': true }, p.title),
+    h('span', { class: 'actions' },
+      col === 'mine' ? h('button', { class: 'act', 'data-tip': post ? 'Remettre dans les PR actives' : 'Mettre en post : en bas de la case, repliée', onclick: e => { stop(e); togglePost(p); } }, post ? '↑ Active' : '↓ Post') : null,
+      h('button', { class: 'act', 'data-tip': hidden ? 'Réafficher' : "Masquer jusqu'au prochain mouvement de la PR", onclick: e => { stop(e); toggleHidden(p); } }, hidden ? 'Réafficher' : '✕'),
+    ),
+    h('span', { class: 'badges' }, p.slots[col].map(s => badge(s))),
+  );
+}
+
+const byUpdatedDesc = (a, b) => b.updatedAt.localeCompare(a.updatedAt);
+const byStage = (a, b) => a.stage - b.stage || (a.stage === 3 ? (a.mergeable ? 0 : 1) - (b.mergeable ? 0 : 1) : 0) || byUpdatedDesc(a, b);
+const byRequest = (a, b) => (b.named - a.named) || a.createdAt.localeCompare(b.createdAt);
+
+function mineCell(prs, repoKey) {
+  const cell = h('div', { class: 'cell', 'data-label': 'Mes PR' });
+  const visible = prs.filter(p => ui.showHidden || !isHidden(p));
+  const active = visible.filter(p => !isPost(p)).sort(byStage);
+  const posted = visible.filter(isPost).sort(byUpdatedDesc);
+  let prev = null;
+  for (const p of active) {
+    if (prev !== null && family(p.stage) !== prev) cell.append(h('div', { class: 'sep' }));
+    cell.append(card(p, 'mine'));
+    prev = family(p.stage);
+  }
+  if (posted.length) {
+    const open = ui.openPost.has(repoKey);
+    cell.append(h('div', { class: 'post-head' }, `Post · ${posted.length}`));
+    for (const p of open ? posted : posted.slice(0, 1)) cell.append(card(p, 'mine'));
+    if (posted.length > 1) {
+      const rest = posted.length - 1;
+      cell.append(h('button', { class: 'more', onclick: () => { open ? ui.openPost.delete(repoKey) : ui.openPost.add(repoKey); render(); } },
+        open ? 'Réduire' : `+ ${rest} autre${rest > 1 ? 's' : ''}`));
+    }
+  }
+  if (!active.length && !posted.length) cell.append(h('div', { class: 'empty' }, '—'));
+  return cell;
+}
+
+function askedCell(prs, repoKey, repoName) {
+  const cell = h('div', { class: 'cell', 'data-label': 'Reviews demandées' });
+  const visible = prs.filter(p => ui.showHidden || !isHidden(p)).sort(byRequest);
+  for (const p of visible) cell.append(card(p, 'asked'));
+  const done = state.done.get(repoKey);
+  const links = [];
+  const searchUrl = q => `https://github.com/search?type=pullrequests&q=${encodeURIComponent(`${q} repo:${repoName}`)}`;
+  if (done?.reviewed) links.push(h('a', { href: searchUrl(SEARCH.reviewed), target: '_blank', rel: 'noopener', 'data-tip': 'PR ouvertes que tu as déjà reviewées' }, `Déjà reviewées · ${done.reviewed} ↗`));
+  if (done?.commented) links.push(h('a', { href: searchUrl(SEARCH.commented), target: '_blank', rel: 'noopener', 'data-tip': 'PR ouvertes que tu as commentées sans les reviewer' }, `Commentées · ${done.commented} ↗`));
+  if (!visible.length && !links.length) cell.append(h('div', { class: 'empty' }, '—'));
+  if (links.length) cell.append(h('div', { class: 'done' }, links));
+  return cell;
+}
+
+function buildRows() {
+  const listed = getRepos();
+  const listedKeys = listed.map(r => r.toLowerCase());
+  const owners = new Set(listedKeys.map(r => r.split('/')[0]));
+  const rows = new Map();
+  for (const [i, key] of listedKeys.entries()) rows.set(key, { key, name: listed[i], listed: true, mine: [], asked: [] });
+  for (const [col, prs] of [['mine', state.mine], ['asked', state.asked]]) {
+    for (const p of prs) {
+      const key = p.repo.toLowerCase();
+      // Unlisted repos only show up when they belong to an owner you already follow, to keep personal side projects out.
+      if (!rows.has(key) && listed.length && !owners.has(key.split('/')[0])) continue;
+      if (!rows.has(key)) rows.set(key, { key, name: p.repo, listed: false, mine: [], asked: [] });
+      const row = rows.get(key);
+      row.name = p.repo;
+      row[col].push(p);
+    }
+  }
+  const all = [...rows.values()];
+  return [...all.filter(r => r.listed), ...all.filter(r => !r.listed).sort((a, b) => a.key.localeCompare(b.key))];
+}
+
+function repoCell(row) {
+  const [owner, name] = row.name.split('/');
+  return h('div', { class: 'repo' },
+    h('span', { class: 'owner' }, owner),
+    h('a', { class: 'name', href: `https://github.com/${row.name}/pulls`, target: '_blank', rel: 'noopener', style: 'text-decoration:none' }, name),
+    row.listed ? null : h('span', { class: 'extra' },
+      h('span', { class: 'tag' }, 'hors liste'),
+      h('button', { class: 'link-btn', 'data-tip': 'Ajouter ce repo à ta liste', onclick: () => { save(LS.repos, [...getRepos(), row.name]); render(); } }, '+ ajouter'),
+    ),
+  );
+}
+
+function headRow() {
+  const col = (label, key) => h('div', { class: 'cell' },
+    h('div', { class: 'colhead' }, h('span', { class: 'label' }, label), h('span', { class: 'badges' }, LEGEND[key].map(s => badge(s, 'legend')))));
+  return h('div', { class: 'row head' }, h('div', { class: 'repo' }, h('span', { class: 'owner' }, 'Repo')), col('Mes PR', 'mine'), col('Reviews demandées', 'asked'));
+}
+
+function hiddenCount() {
+  return [...state.mine, ...state.asked].filter(isHidden).length;
+}
+
+function renderTop() {
+  const status = $('#status');
+  if (state.loading) status.textContent = 'Chargement…';
+  else if (state.fetchedAt) status.textContent = `À jour à ${new Date(state.fetchedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${state.me ? ` · ${state.me}` : ''}`;
+  else status.textContent = '';
+  $('#refresh').disabled = state.loading;
+
+  const n = hiddenCount();
+  const toggle = $('#toggle-hidden');
+  toggle.hidden = n === 0 && !ui.showHidden;
+  toggle.textContent = ui.showHidden ? 'Cacher les masquées' : `Masquées · ${n}`;
+
+  const banner = $('#banner');
+  const messages = [state.error, ...state.warnings].filter(Boolean);
+  banner.hidden = messages.length === 0;
+  banner.textContent = messages.join(' · ');
+}
+
+function render() {
+  renderTop();
+  const board = $('#board');
+  board.replaceChildren();
+  if (!getToken() && !state.fetchedAt) {
+    board.append(h('div', { class: 'blank' }, 'Il faut un token GitHub pour lire tes PR.', h('button', { class: 'btn primary', onclick: () => openSettings() }, 'Ajouter un token')));
+    return;
+  }
+  board.append(headRow());
+  for (const row of buildRows()) board.append(h('div', { class: 'row' }, repoCell(row), mineCell(row.mine, row.key), askedCell(row.asked, row.key, row.name)));
+}
+
+// ---------- Tooltip ----------
+
+const tip = $('#tip');
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el || (el.hasAttribute('data-tip-if-cut') && el.scrollWidth <= el.clientWidth)) { tip.hidden = true; return; }
+  tip.textContent = el.getAttribute('data-tip');
+  tip.hidden = false;
+  const r = el.getBoundingClientRect();
+  const x = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - tip.offsetWidth / 2));
+  let y = r.top - tip.offsetHeight - 6;
+  if (y < 8) y = r.bottom + 6;
+  tip.style.left = `${x}px`;
+  tip.style.top = `${y}px`;
+});
+document.addEventListener('scroll', () => { tip.hidden = true; }, true);
+
+// ---------- Settings ----------
+
+const dlg = $('#settings');
+
+// A fine-grained token covers a single owner, so the link targets the owner of the first listed repo.
+function fineGrainedTokenUrl(owner) {
+  const params = new URLSearchParams({
+    name: 'PR Dashboard',
+    description: 'Lecture seule pour le PR Dashboard : PR, reviews et checks.',
+    expires_in: '366',
+    pull_requests: 'read',
+    contents: 'read',
+    statuses: 'read',
+    members: 'read',
+  });
+  if (owner) params.set('target_name', owner);
+  return `https://github.com/settings/personal-access-tokens/new?${params}`;
+}
+
+function updateTokenLink() {
+  const owner = parseRepos($('#repos').value)[0]?.split('/')[0] || '';
+  $('#fg-link').href = fineGrainedTokenUrl(owner);
+  $('#fg-owner').textContent = owner || 'ton org';
+}
+
+function openSettings(message) {
+  $('#token').value = getToken();
+  $('#repos').value = getRepos().join('\n');
+  updateTokenLink();
+  $('#settings-msg').textContent = message || '';
+  $('#settings-msg').hidden = !message;
+  if (!dlg.open) dlg.showModal();
+}
+
+function parseRepos(text) {
+  const repos = text.split(/[\s,]+/)
+    .map(s => s.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/\/+$/, ''))
+    .filter(s => /^[\w.-]+\/[\w.-]+$/.test(s));
+  return [...new Map(repos.map(r => [r.toLowerCase(), r])).values()];
+}
+
+$('#settings-form').addEventListener('submit', () => {
+  const token = $('#token').value.trim();
+  if (token) save(LS.token, token); else forget(LS.token);
+  save(LS.repos, parseRepos($('#repos').value));
+  refresh();
+});
+$('#repos').addEventListener('input', updateTokenLink);
+$('#cancel').addEventListener('click', () => dlg.close());
+$('#forget').addEventListener('click', () => {
+  forget(LS.token);
+  $('#token').value = '';
+  Object.assign(state, { me: null, mine: [], asked: [], done: new Map(), fetchedAt: 0, error: null, warnings: [] });
+  render();
+});
+$('#open-settings').addEventListener('click', () => openSettings());
+$('#refresh').addEventListener('click', () => refresh());
+$('#toggle-hidden').addEventListener('click', () => { ui.showHidden = !ui.showHidden; render(); });
+
+// Refresh when coming back to the tab, at most once a minute.
+const refreshIfStale = () => { if (getToken() && !document.hidden && Date.now() - state.fetchedAt > 60_000) refresh(); };
+document.addEventListener('visibilitychange', refreshIfStale);
+window.addEventListener('focus', refreshIfStale);
+
+// Debug hook: lets a GraphQL answer be rendered by hand, e.g. prdash.render(json).
+window.prdash = { query: { query: QUERY, variables: SEARCH }, render: json => { applyResponse(json); render(); } };
+
+render();
+refresh();
+</script>
+</body>
+</html>
