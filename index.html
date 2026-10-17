@@ -124,6 +124,9 @@
   .login-row { display: flex; gap: 8px; margin-top: 6px; }
   .login-row input { flex: 1; min-width: 0; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--text); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
   .login .help { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  .new-token { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .new-token h3 { margin: 0 0 10px; font-size: 14px; }
+  .new-token .btn { display: inline-block; text-decoration: none; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
   .dlg-actions { display: flex; gap: 8px; margin-top: 18px; align-items: center; }
   .dlg-actions .spacer { flex: 1; }
@@ -155,7 +158,11 @@
     <button type="submit" class="btn primary">Ouvrir</button>
   </div>
   <p class="help">Range ce token dans ton gestionnaire de mots de passe, avec l'adresse de cette page : il remplira ce champ à chaque ouverture. La page ne l'enregistre nulle part et l'oublie quand tu fermes l'onglet.</p>
-  <p class="help">Pas encore de token ? Ouvre les <button type="button" class="link-btn" id="login-settings">Réglages</button> : renseigne tes repos, puis suis le lien de création.</p>
+  <div class="new-token">
+    <h3>Pas encore de token ?</h3>
+    <a class="btn" href="https://github.com/settings/tokens/new?scopes=repo,read:org&amp;description=PR%20Dashboard" target="_blank" rel="noopener">Créer un token classique ↗</a>
+    <p class="help">Les scopes <code>repo</code> et <code>read:org</code> sont déjà cochés. Choisis une durée courte, par exemple 90 jours. Si ton org impose le SSO, clique ensuite sur « Configure SSO » à côté du token pour l'autoriser.</p>
+  </div>
 </form>
 <main class="board" id="board" hidden></main>
 <div id="tip" hidden></div>
@@ -166,9 +173,6 @@
     <label for="repos">Repos, un par ligne, dans l'ordre d'affichage</label>
     <textarea id="repos" rows="6" spellcheck="false" placeholder="owner/repo"></textarea>
     <p class="help">Un repo absent de la liste mais du même owner apparaît en bas, marqué « hors liste ». Liste vide : tous les repos s'affichent.</p>
-    <label>Créer un token</label>
-    <p class="help">Recommandé : un token fine-grained en lecture seule, limité à <strong id="fg-owner">ton compte</strong> (<a id="fg-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">créer le token</a>, permissions déjà remplies). Il vise l'owner du premier repo de la liste ci-dessus. Sur GitHub, il ne reste qu'à choisir « All repositories ». Si l'org exige une approbation, le token ne voit rien tant qu'un admin ne l'a pas validé.</p>
-    <p class="help">Plan B, si les checks restent vides avec ce token : un token classique avec les scopes <code>repo</code> et <code>read:org</code> (<a href="https://github.com/settings/tokens/new?scopes=repo,read:org&amp;description=PR%20dashboard" target="_blank" rel="noopener">créer le token</a>). Si l'org impose le SSO, clique ensuite sur « Configure SSO » à côté du token.</p>
     <div class="dlg-actions">
       <button type="button" class="btn ghost" id="forget">Oublier le token</button>
       <span class="spacer"></span>
@@ -607,30 +611,8 @@ document.addEventListener('scroll', () => { tip.hidden = true; }, true);
 
 const dlg = $('#settings');
 
-// A fine-grained token covers a single owner, so the link targets the owner of the first listed repo.
-function fineGrainedTokenUrl(owner) {
-  const params = new URLSearchParams({
-    name: 'PR Dashboard',
-    description: 'Lecture seule pour le PR Dashboard : PR, reviews et checks.',
-    expires_in: '366',
-    pull_requests: 'read',
-    contents: 'read',
-    statuses: 'read',
-    members: 'read',
-  });
-  if (owner) params.set('target_name', owner);
-  return `https://github.com/settings/personal-access-tokens/new?${params}`;
-}
-
-function updateTokenLink() {
-  const owner = parseRepos($('#repos').value)[0]?.split('/')[0] || '';
-  $('#fg-link').href = fineGrainedTokenUrl(owner);
-  $('#fg-owner').textContent = owner || 'ton compte';
-}
-
 function openSettings() {
   $('#repos').value = getRepos().join('\n');
-  updateTokenLink();
   $('#forget').hidden = !token;
   if (!dlg.open) dlg.showModal();
 }
@@ -647,7 +629,6 @@ $('#settings-form').addEventListener('submit', () => {
   save(LS.repos, parseRepos($('#repos').value));
   render();
 });
-$('#repos').addEventListener('input', updateTokenLink);
 $('#cancel').addEventListener('click', () => dlg.close());
 $('#forget').addEventListener('click', () => { dlg.close(); lock(); });
 $('#open-settings').addEventListener('click', () => openSettings());
@@ -671,7 +652,6 @@ $('#login').addEventListener('submit', e => {
   render();
   refresh();
 });
-$('#login-settings').addEventListener('click', () => openSettings());
 $('#refresh').addEventListener('click', () => refresh());
 $('#toggle-hidden').addEventListener('click', () => { ui.showHidden = !ui.showHidden; render(); });
 

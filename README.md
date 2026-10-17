@@ -18,10 +18,7 @@ La page appelle l'API GitHub directement depuis le navigateur, sans serveur. Ell
 
 Ta liste de repos et tes PR en post ou masquées restent dans le localStorage du navigateur. Rien de tout ça n'est sensible.
 
-Les réglages proposent deux liens de création pré-remplis :
-
-- un token fine-grained en lecture seule, limité à un seul owner. Selon l'org, il peut demander l'approbation d'un owner ;
-- un token classique avec les scopes `repo` et `read:org`, si l'org bloque les tokens fine-grained ou si les checks restent vides.
+L'écran de connexion propose un lien qui crée un token classique avec les scopes `repo` et `read:org` déjà cochés. Choisis une durée courte. Si ton org impose le SSO, autorise ensuite le token pour elle avec « Configure SSO ».
 
 ## Développement
 
