@@ -321,7 +321,7 @@ function derive(p, me) {
     : checksOk ? { cls: 'off', tip: 'No CI checks' }
     : { cls: 'bad', icon: 'x', tip: 'CI checks failed' };
   const conflictSlot = conflict ? { cls: 'bad', icon: 'neq', tip: 'Conflicts with the base branch' }
-    : p.mergeable === 'UNKNOWN' ? { cls: 'off', icon: 'q', tip: 'GitHub is still checking for conflicts' }
+    : p.mergeable === 'UNKNOWN' ? { cls: 'off', icon: 'q', tip: 'GitHub was still checking for conflicts. Refresh to see the result.' }
     : { cls: 'ok', icon: 'check', tip: 'No conflicts with the base branch' };
 
   return {
@@ -355,7 +355,6 @@ const LEGEND = {
 
 const state = { me: null, mine: [], asked: [], done: new Map(), fetchedAt: 0, loading: false, error: null, warnings: [] };
 const ui = { showHidden: false, openPaused: new Set() };
-let unknownRetries = 0;
 
 function applyResponse(json) {
   const d = json.data;
@@ -397,9 +396,6 @@ async function refresh() {
   try {
     applyResponse(await gql(token));
     state.error = null;
-    // GitHub computes conflicts lazily: the first answer often says "unknown". Finish this refresh with a second ask shortly after.
-    const unknown = [...state.mine, ...state.asked].some(p => p.mergeableRaw === 'UNKNOWN');
-    if (unknown && unknownRetries < 2) { unknownRetries++; setTimeout(refresh, 5000); } else unknownRetries = 0;
   } catch (e) {
     if (e.auth) lock(e.message);
     else state.error = e instanceof TypeError ? "Can't reach GitHub. Check your connection." : e.message;
